@@ -10,6 +10,8 @@ Author URI: https://www.laobuluo.com
 
 require_once 'actions.php';
 
+
+$current_wp_version = get_bloginfo('version');
 # 插件 activation 函数当一个插件在 WordPress 中”activated(启用)”时被触发。
 register_activation_hook(__FILE__, 'wpupyun_set_options');
 register_deactivation_hook(__FILE__, 'wpupyun_restore_options');  # 禁用时触发钩子
@@ -18,11 +20,15 @@ register_deactivation_hook(__FILE__, 'wpupyun_restore_options');  # 禁用时触
 # 避免上传插件/主题被同步到对象存储
 if (substr_count($_SERVER['REQUEST_URI'], '/update.php') <= 0) {
 	add_filter('wp_handle_upload', 'wpupyun_upload_attachments');
-	// add_filter('wp_generate_attachment_metadata', 'wpupyun_upload_and_thumbs');
+        if ( (float)$current_wp_version >= 5.3 ) {
+	    add_filter('wp_generate_attachment_metadata', 'wpupyun_upload_and_thumbs');
+	}
 }
 
-# 附件更新后触发
-add_filter( 'wp_update_attachment_metadata', 'wpupyun_upload_and_thumbs' );
+if ( (float)$current_wp_version < 5.3 ) {
+    # 附件更新后触发
+    add_filter( 'wp_update_attachment_metadata', 'wpupyun_upload_and_thumbs' );
+}
 
 # 检测不重复的文件名
 add_filter('wp_unique_filename', 'wpupyun_unique_filename');
